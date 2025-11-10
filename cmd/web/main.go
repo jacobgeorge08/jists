@@ -52,16 +52,21 @@ func main() {
 	sessionManager.Lifetime = 12 * time.Hour
 
 	app := &application{
-		logger:        logger,
-		snippets:      &models.SnippetModel{DB: db},
-		templateCache: templateCache,
-		formDecoder:   formDecoder,
-		sessionManager : sessionManager,
+		logger:         logger,
+		snippets:       &models.SnippetModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 
-	logger.Info("starting a server", slog.Any("addr", *addr))
+	srv := &http.Server{
+		Addr:    *addr,
+		Handler: app.routes(),
+	}
 
-	err = http.ListenAndServe(*addr, app.routes())
+	logger.Info("starting a server", "addr", srv.Addr)
+
+	err = srv.ListenAndServe()
 	logger.Error(err.Error())
 	os.Exit(1)
 }
